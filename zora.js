@@ -25,14 +25,10 @@ function renderStore(data = products) {
             <div class="img-container mb-6">
                 <img src="${p.img}" alt="${p.name}" class="max-h-full max-w-full object-contain">
             </div>
-            <h3 class="text-center font-black text-sm tracking-widest mb-2 uppercase px-2 text-white">${p.name}</h3>
-            
-            <p class="text-center text-[11px] text-gray-400 uppercase tracking-normal mb-4 px-4 leading-relaxed">${p.desc || ''}</p>
-            
-            <p class="text-center font-light text-gray-300 text-lg mb-8">PHP ${p.price.toLocaleString()}</p>
-            
-            <button onclick="addToCart(${p.id})" class="w-full border border-white py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all">Add to Cart</button>
-            
+            <h3 class="modern-bold text-center text-xl mb-2 px-2 text-white">${p.name}</h3>
+            <p class="text-center text-[11px] text-gray-400 uppercase mb-4 px-4 leading-relaxed">${p.desc || ''}</p>
+            <p class="modern-bold text-center text-2xl mb-8">PHP ${p.price.toLocaleString()}</p>
+            <button onclick="addToCart(${p.id})" class="modern-bold w-full border border-white py-4 text-xs hover:bg-white hover:text-black transition-all">Add to Cart</button>
             <div class="mt-8 border-t border-zinc-900 pt-4">
                 <div class="max-h-20 overflow-y-auto mb-4 space-y-2 pr-2 text-[10px] text-gray-500 italic">
                     ${(p.reviews || []).map(r => `<p>"${r}"</p>`).join('')}
@@ -51,22 +47,21 @@ function updateCartUI() {
     document.getElementById('cart-count').innerText = cart.reduce((acc, i) => acc + i.qty, 0);
     const list = document.getElementById('cart-items');
     
-    // Clean code to prevent the image URL/Class from showing as text
     list.innerHTML = cart.map(i => `
         <div class="flex items-center justify-between border-b border-zinc-900 pb-6">
             <div class="flex items-center gap-6">
-                <div class="w-16 h-16 bg-white flex items-center justify-center p-1">
+                <div class="w-20 h-20 bg-white flex items-center justify-center p-1">
                     <img src="${i.img}" class="max-h-full max-w-full object-contain">
                 </div>
                 <div>
-                    <p class="text-[11px] font-black uppercase">${i.name}</p>
+                    <p class="modern-bold text-lg">${i.name}</p>
                     <p class="text-sm font-light text-gray-500">PHP ${(i.price * i.qty).toLocaleString()}</p>
                 </div>
             </div>
             <div class="flex items-center gap-4">
-                <button onclick="changeQty(${i.id}, -1)" class="text-xl font-light">-</button>
-                <span class="font-black text-sm">${i.qty}</span>
-                <button onclick="changeQty(${i.id}, 1)" class="text-xl font-light">+</button>
+                <button onclick="changeQty(${i.id}, -1)" class="text-2xl font-light">-</button>
+                <span class="modern-bold text-lg">${i.qty}</span>
+                <button onclick="changeQty(${i.id}, 1)" class="text-2xl font-light">+</button>
             </div>
         </div>
     `).join('');
@@ -80,24 +75,10 @@ function addNewProduct() {
     const price = document.getElementById('add-price').value;
     const img = document.getElementById('add-img').value;
     const desc = document.getElementById('add-desc').value;
-    
     if(!name || !price) return alert("MISSING INFO");
-    
-    products.push({ 
-        id: Date.now(), 
-        name, 
-        price: parseFloat(price), 
-        desc: desc || '',
-        img: img || 'https://via.placeholder.com/400', 
-        reviews: [] 
-    });
-    
+    products.push({ id: Date.now(), name, price: parseFloat(price), desc: desc || '', img: img || 'https://via.placeholder.com/400', reviews: [] });
     save(); renderStore();
-    
-    document.getElementById('add-name').value = ''; 
-    document.getElementById('add-price').value = ''; 
-    document.getElementById('add-img').value = '';
-    document.getElementById('add-desc').value = '';
+    document.getElementById('add-name').value = ''; document.getElementById('add-price').value = ''; document.getElementById('add-img').value = ''; document.getElementById('add-desc').value = '';
 }
 
 function removeProduct(id) {
@@ -108,7 +89,7 @@ function renderAdminList() {
     const list = document.getElementById('inventory-list');
     list.innerHTML = products.map(p => `
         <div class="flex justify-between items-center border border-zinc-900 p-4">
-            <span class="text-[10px] uppercase font-black">${p.name}</span>
+            <span class="modern-bold text-xs">${p.name}</span>
             <button onclick="removeProduct(${p.id})" class="text-red-800 text-[10px] font-black uppercase">Delete</button>
         </div>
     `).join('');
@@ -150,9 +131,7 @@ function checkout() {
     let text = `Hello Zora.ph! 👋 I want to order:\n\n`;
     cart.forEach(i => text += `• ${i.qty}x ${i.name} (PHP ${i.price * i.qty})\n`);
     text += `\nTotal: PHP ${cart.reduce((sum, i) => sum + (i.price * i.qty), 0)}\n\nLocation: Lucena City 📍`;
-
     window.open(`https://ig.me/m/${INSTAGRAM_USERNAME}?text=${encodeURIComponent(text)}`, '_blank');
-
     cart = []; updateCartUI(); toggleCart();
     document.getElementById('thanks-banner').style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
