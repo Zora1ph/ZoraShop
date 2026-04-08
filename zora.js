@@ -124,29 +124,30 @@ function addReview(id) {
     save(); renderStore();
 }
 
-// --- NEW IMPROVED CHECKOUT FUNCTION ---
+// --- UPDATED CHECKOUT TO FORCE IG OPEN ---
 function checkout() {
     if(cart.length === 0) return alert("EMPTY CART");
     
-    let text = `ORDER FROM ZORA.PH:\n\n`;
-    cart.forEach(i => text += `• ${i.qty}x ${i.name} (PHP ${i.price * i.qty})\n`);
-    text += `\nTotal: PHP ${cart.reduce((sum, i) => sum + (i.price * i.qty), 0)}\n\nLocation: Lucena City 📍`;
+    let orderDetails = `ORDER FROM ZORA.PH:\n\n`;
+    cart.forEach(i => orderDetails += `• ${i.qty}x ${i.name} (PHP ${i.price * i.qty})\n`);
+    orderDetails += `\nTotal: PHP ${cart.reduce((sum, i) => sum + (i.price * i.qty), 0)}\n\nLocation: Lucena City 📍`;
 
-    // 1. Copy text to clipboard as backup
-    navigator.clipboard.writeText(text).catch(() => {});
+    // 1. Force copy to clipboard first (Backup)
+    navigator.clipboard.writeText(orderDetails).then(() => {
+        alert("Order copied! Paste it in the IG chat if it doesn't auto-fill.");
+    }).catch(() => {});
 
-    // 2. Try the Instagram Message Link
-    const igUrl = `https://ig.me/m/${INSTAGRAM_USERNAME}?text=${encodeURIComponent(text)}`;
+    // 2. Try the direct Message Intent (Better for Android/iOS)
+    const directUrl = `https://www.instagram.com/direct/t/${INSTAGRAM_USERNAME}/`;
     
-    // 3. Use location.href instead of window.open (Better for Mobile)
-    window.location.href = igUrl;
+    // 3. Try opening the chat
+    window.location.href = directUrl;
 
-    // Reset UI
+    // Reset Site
     cart = []; 
     updateCartUI(); 
     toggleCart();
     document.getElementById('thanks-banner').style.display = 'block';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function closeThanks() { document.getElementById('thanks-banner').style.display = 'none'; }
