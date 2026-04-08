@@ -49,8 +49,8 @@
             margin-top: 50px;
         }
         
-        input { background: #000; border: 1px solid #333; color: white; border-radius: 0px; }
-        input:focus { border-color: #ffffff; outline: none; }
+        input, textarea { background: #000; border: 1px solid #333; color: white; border-radius: 0px; }
+        input:focus, textarea:focus { border-color: #ffffff; outline: none; }
 
         #thanks-banner {
             display: none;
@@ -79,7 +79,7 @@
 <body class="p-4">
 
     <div id="thanks-banner">
-        🎉 ORDER INITIATED! REDIRECTING TO INSTAGRAM...
+        🎉 ORDER PREPARED! PLEASE TAP "SEND" IN INSTAGRAM TO FINISH.
         <button onclick="closeThanks()" class="ml-4 underline text-xs">CLOSE</button>
     </div>
 
@@ -110,20 +110,21 @@
     </footer>
 
     <section id="admin-panel" class="max-w-4xl mx-auto p-8 mb-24">
-        <h2 class="text-sm font-black uppercase text-center mb-6 tracking-widest underline">Inventory Management</h2>
+        <h2 class="text-sm font-black uppercase text-center mb-6 tracking-widest underline">Management</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
             <input type="text" id="add-name" placeholder="PRODUCT NAME" class="p-4">
             <input type="number" id="add-price" placeholder="PRICE (PHP)" class="p-4">
-            <input type="text" id="add-img" placeholder="IMAGE URL (LINK)" class="p-4 md:col-span-2">
-            <button onclick="addNewProduct()" class="bg-white text-black font-black py-4 uppercase tracking-widest hover:bg-gray-200 transition-all">Update Inventory</button>
+            <input type="text" id="add-img" placeholder="IMAGE URL" class="p-4 md:col-span-2">
+            <textarea id="add-desc" placeholder="PRODUCT DESCRIPTION (Material, size, etc.)" class="p-4 md:col-span-2 h-24"></textarea>
+            <button onclick="addNewProduct()" class="bg-white text-black font-black py-4 uppercase tracking-widest md:col-span-2">Update Store</button>
         </div>
         <div id="inventory-list" class="space-y-2 border-t border-zinc-800 pt-6"></div>
-        <button onclick="document.getElementById('admin-panel').style.display='none'" class="mt-4 w-full text-[10px] text-gray-600 uppercase tracking-widest">Close Panel</button>
+        <button onclick="document.getElementById('admin-panel').style.display='none'" class="mt-4 w-full text-[10px] text-gray-600 uppercase">Close</button>
     </section>
 
     <div id="cart-drawer" class="fixed bottom-8 right-8 z-50">
         <button onclick="toggleCart()" class="bg-white text-black px-10 py-5 font-black shadow-[0_0_20px_rgba(255,255,255,0.2)] flex items-center gap-4 hover:scale-105 transition-transform">
-            MY BAG [<span id="cart-count">0</span>]
+            CART [<span id="cart-count">0</span>]
         </button>
     </div>
 
@@ -133,13 +134,13 @@
                 <h2 class="text-2xl font-black uppercase tracking-tighter">Your Selection</h2>
                 <button onclick="toggleCart()" class="text-white text-3xl font-light">&times;</button>
             </div>
-            <div id="cart-items" class="flex-grow overflow-y-auto space-y-6 mb-8 pr-2" style="scrollbar-width: none;"></div>
+            <div id="cart-items" class="flex-grow overflow-y-auto space-y-6 mb-8 pr-2"></div>
             <div class="border-t border-zinc-800 pt-8 space-y-6">
                 <div class="flex justify-between text-2xl font-black tracking-tighter">
                     <span>TOTAL</span>
                     <span id="cart-total">PHP 0.00</span>
                 </div>
-                <button onclick="checkout()" class="w-full bg-white text-black py-5 font-black uppercase tracking-[0.2em] hover:bg-gray-300 transition">Complete Purchase</button>
+                <button onclick="checkout()" class="w-full bg-white text-black py-5 font-black uppercase tracking-[0.2em] hover:bg-gray-300 transition">Check Out</button>
             </div>
         </div>
     </div>
