@@ -46,7 +46,6 @@ function renderStore(data = products) {
 function updateCartUI() {
     document.getElementById('cart-count').innerText = cart.reduce((acc, i) => acc + i.qty, 0);
     const list = document.getElementById('cart-items');
-    
     list.innerHTML = cart.map(i => `
         <div class="flex items-center justify-between border-b border-zinc-900 pb-6">
             <div class="flex items-center gap-6">
@@ -65,7 +64,6 @@ function updateCartUI() {
             </div>
         </div>
     `).join('');
-    
     const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
     document.getElementById('cart-total').innerText = "PHP " + total.toLocaleString();
 }
@@ -126,13 +124,27 @@ function addReview(id) {
     save(); renderStore();
 }
 
+// --- NEW IMPROVED CHECKOUT FUNCTION ---
 function checkout() {
     if(cart.length === 0) return alert("EMPTY CART");
-    let text = `Hello Zora.ph! 👋 I want to order:\n\n`;
+    
+    let text = `ORDER FROM ZORA.PH:\n\n`;
     cart.forEach(i => text += `• ${i.qty}x ${i.name} (PHP ${i.price * i.qty})\n`);
     text += `\nTotal: PHP ${cart.reduce((sum, i) => sum + (i.price * i.qty), 0)}\n\nLocation: Lucena City 📍`;
-    window.open(`https://ig.me/m/${INSTAGRAM_USERNAME}?text=${encodeURIComponent(text)}`, '_blank');
-    cart = []; updateCartUI(); toggleCart();
+
+    // 1. Copy text to clipboard as backup
+    navigator.clipboard.writeText(text).catch(() => {});
+
+    // 2. Try the Instagram Message Link
+    const igUrl = `https://ig.me/m/${INSTAGRAM_USERNAME}?text=${encodeURIComponent(text)}`;
+    
+    // 3. Use location.href instead of window.open (Better for Mobile)
+    window.location.href = igUrl;
+
+    // Reset UI
+    cart = []; 
+    updateCartUI(); 
+    toggleCart();
     document.getElementById('thanks-banner').style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
