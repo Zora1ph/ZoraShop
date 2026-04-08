@@ -23,14 +23,18 @@ function renderStore(data = products) {
     grid.innerHTML = data.map(p => `
         <div class="product-card p-4">
             <div class="img-container mb-6">
-                <img src="${p.img}" class="max-h-full object-contain">
+                <img src="${p.img}" alt="${p.name}" class="max-h-full max-w-full object-contain">
             </div>
-            <h3 class="text-center font-black text-xs tracking-widest mb-1 uppercase px-2">${p.name}</h3>
-            <p class="text-center text-[9px] text-gray-500 uppercase tracking-tighter mb-4 px-4">${p.desc || ''}</p>
-            <p class="text-center font-light text-gray-400 text-lg mb-8">PHP ${p.price.toLocaleString()}</p>
+            <h3 class="text-center font-black text-sm tracking-widest mb-2 uppercase px-2 text-white">${p.name}</h3>
+            
+            <p class="text-center text-[11px] text-gray-400 uppercase tracking-normal mb-4 px-4 leading-relaxed">${p.desc || ''}</p>
+            
+            <p class="text-center font-light text-gray-300 text-lg mb-8">PHP ${p.price.toLocaleString()}</p>
+            
             <button onclick="addToCart(${p.id})" class="w-full border border-white py-4 font-black uppercase text-[10px] tracking-widest hover:bg-white hover:text-black transition-all">Add to Cart</button>
+            
             <div class="mt-8 border-t border-zinc-900 pt-4">
-                <div class="max-h-20 overflow-y-auto mb-4 space-y-2 pr-2 text-[10px] text-gray-400 italic">
+                <div class="max-h-20 overflow-y-auto mb-4 space-y-2 pr-2 text-[10px] text-gray-500 italic">
                     ${(p.reviews || []).map(r => `<p>"${r}"</p>`).join('')}
                 </div>
                 <div class="flex gap-2">
@@ -41,6 +45,34 @@ function renderStore(data = products) {
         </div>
     `).join('');
     renderAdminList();
+}
+
+function updateCartUI() {
+    document.getElementById('cart-count').innerText = cart.reduce((acc, i) => acc + i.qty, 0);
+    const list = document.getElementById('cart-items');
+    
+    // Clean code to prevent the image URL/Class from showing as text
+    list.innerHTML = cart.map(i => `
+        <div class="flex items-center justify-between border-b border-zinc-900 pb-6">
+            <div class="flex items-center gap-6">
+                <div class="w-16 h-16 bg-white flex items-center justify-center p-1">
+                    <img src="${i.img}" class="max-h-full max-w-full object-contain">
+                </div>
+                <div>
+                    <p class="text-[11px] font-black uppercase">${i.name}</p>
+                    <p class="text-sm font-light text-gray-500">PHP ${(i.price * i.qty).toLocaleString()}</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="changeQty(${i.id}, -1)" class="text-xl font-light">-</button>
+                <span class="font-black text-sm">${i.qty}</span>
+                <button onclick="changeQty(${i.id}, 1)" class="text-xl font-light">+</button>
+            </div>
+        </div>
+    `).join('');
+    
+    const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
+    document.getElementById('cart-total').innerText = "PHP " + total.toLocaleString();
 }
 
 function addNewProduct() {
@@ -89,30 +121,9 @@ function addToCart(id) {
     updateCartUI();
 }
 
-function updateCartUI() {
-    document.getElementById('cart-count').innerText = cart.reduce((acc, i) => acc + i.qty, 0);
-    const list = document.getElementById('cart-items');
-    list.innerHTML = cart.map(i => `
-        <div class="flex items-center justify-between border-b border-zinc-900 pb-6">
-            <div class="flex items-center gap-6">
-                <img src="${i.img}" class="w-16 h-16 bg-white object-contain p-2">
-                <div>
-                    <p class="text-[10px] font-black uppercase">${i.name}</p>
-                    <p class="text-sm font-light text-gray-500">PHP ${i.price * i.qty}</p>
-                </div>
-            </div>
-            <div class="flex items-center gap-4">
-                <button onclick="changeQty(${i.id}, -1)" class="text-xl font-light">-</button>
-                <span class="font-black text-sm">${i.qty}</span>
-                <button onclick="changeQty(${i.id}, 1)" class="text-xl font-light">+</button>
-            </div>
-        </div>
-    `).join('');
-    document.getElementById('cart-total').innerText = "PHP " + cart.reduce((sum, i) => sum + (i.price * i.qty), 0).toLocaleString();
-}
-
 function changeQty(id, delta) {
     const item = cart.find(c => c.id === id);
+    if(!item) return;
     item.qty += delta;
     if(item.qty <= 0) cart = cart.filter(c => c.id !== id);
     updateCartUI();
