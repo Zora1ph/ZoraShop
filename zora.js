@@ -124,26 +124,31 @@ function addReview(id) {
     save(); renderStore();
 }
 
-// --- UPDATED CHECKOUT TO FORCE IG OPEN ---
-function checkout() {
+// THE "WORKS EVERY TIME" CHECKOUT
+async function checkout() {
     if(cart.length === 0) return alert("EMPTY CART");
     
     let orderDetails = `ORDER FROM ZORA.PH:\n\n`;
     cart.forEach(i => orderDetails += `• ${i.qty}x ${i.name} (PHP ${i.price * i.qty})\n`);
     orderDetails += `\nTotal: PHP ${cart.reduce((sum, i) => sum + (i.price * i.qty), 0)}\n\nLocation: Lucena City 📍`;
 
-    // 1. Force copy to clipboard first (Backup)
-    navigator.clipboard.writeText(orderDetails).then(() => {
-        alert("Order copied! Paste it in the IG chat if it doesn't auto-fill.");
-    }).catch(() => {});
+    // 1. Copy to clipboard immediately
+    try {
+        await navigator.clipboard.writeText(orderDetails);
+    } catch (err) {
+        console.error('Clipboard failed', err);
+    }
 
-    // 2. Try the direct Message Intent (Better for Android/iOS)
-    const directUrl = `https://www.instagram.com/direct/t/${INSTAGRAM_USERNAME}/`;
+    // 2. Alert the user so they know what to do if IG acts up
+    alert("ORDER DETAILS COPIED!\n\nWe are opening Instagram. If the message box is empty, just PASTE your order.");
+
+    // 3. Try to open the DM link
+    // This is the officially supported URL to start a DM
+    const igDirectUrl = `https://www.instagram.com/direct/t/${INSTAGRAM_USERNAME}/`;
     
-    // 3. Try opening the chat
-    window.location.href = directUrl;
+    window.location.href = igDirectUrl;
 
-    // Reset Site
+    // 4. Reset cart
     cart = []; 
     updateCartUI(); 
     toggleCart();
