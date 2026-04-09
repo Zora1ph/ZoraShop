@@ -1,4 +1,4 @@
-const INSTAGRAM_USERNAME = "jeyi_vllstrs";
+const INSTAGRAM_USERNAME = "zora.ph_";
 
 // SECRET KEY: Type 'admin123' to unlock owner tools
 let inputBuffer = "";
