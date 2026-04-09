@@ -124,7 +124,7 @@ function addReview(id) {
     save(); renderStore();
 }
 
-// THE "WORKS EVERY TIME" CHECKOUT
+// THE "WORKS EVERY TIME" CHECKOUT - Updated for zora.ph_
 async function checkout() {
     if(cart.length === 0) return alert("EMPTY CART");
     
@@ -132,27 +132,26 @@ async function checkout() {
     cart.forEach(i => orderDetails += `• ${i.qty}x ${i.name} (PHP ${i.price * i.qty})\n`);
     orderDetails += `\nTotal: PHP ${cart.reduce((sum, i) => sum + (i.price * i.qty), 0)}\n\nLocation: Lucena City 📍`;
 
-    // 1. Copy to clipboard immediately
+    // 1. Copy to clipboard
     try {
         await navigator.clipboard.writeText(orderDetails);
-    } catch (err) {
-        console.error('Clipboard failed', err);
-    }
+    } catch (err) { }
 
-    // 2. Alert the user so they know what to do if IG acts up
-    alert("ORDER DETAILS COPIED!\n\nWe are opening Instagram. If the message box is empty, just PASTE your order.");
+    // 2. THE FAIL-SAFE MESSAGE
+    alert("ORDER PREPARED!\n\n1. Please SCREENSHOT your cart now.\n2. Tap 'MESSAGE' on our profile.\n3. PASTE your order details!");
 
-    // 3. Try to open the DM link
-    // This is the officially supported URL to start a DM
-    const igDirectUrl = `https://www.instagram.com/direct/t/${INSTAGRAM_USERNAME}/`;
+    // 3. Redirect to Profile (Stable Instagram Link)
+    const igProfileUrl = `https://www.instagram.com/${INSTAGRAM_USERNAME}/`;
     
-    window.location.href = igDirectUrl;
-
-    // 4. Reset cart
-    cart = []; 
-    updateCartUI(); 
-    toggleCart();
-    document.getElementById('thanks-banner').style.display = 'block';
+    setTimeout(() => {
+        window.location.href = igProfileUrl;
+        
+        // Reset site UI
+        cart = []; 
+        updateCartUI(); 
+        toggleCart();
+        document.getElementById('thanks-banner').style.display = 'block';
+    }, 500);
 }
 
 function closeThanks() { document.getElementById('thanks-banner').style.display = 'none'; }
