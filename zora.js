@@ -1,8 +1,7 @@
-// 1. YOUR OFFICIAL ZORA CLOUD CONFIG
+// 1. OFFICIAL ZORA CLOUD CONFIG (SINGAPORE REGION)
 const firebaseConfig = {
   apiKey: "AIzaSyCa65Smn_puWDXiyU5p_K9JprJ0wk42CuE",
   authDomain: "zora-shop.firebaseapp.com",
-  // Updated to your specific Singapore Database address
   databaseURL: "https://zora-shop-default-rtdb.asia-southeast1.firebasedatabase.app/", 
   projectId: "zora-shop",
   storageBucket: "zora-shop.firebasestorage.app",
@@ -11,7 +10,7 @@ const firebaseConfig = {
   measurementId: "G-9VZQMW3W9Y"
 };
 
-// 2. CONNECT TO THE CLOUD
+// 2. CONNECT TO THE CLOUD (Using Compat Mode for your HTML Scripts)
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
@@ -19,14 +18,14 @@ const INSTAGRAM_USERNAME = "zora.ph_";
 let products = [];
 let cart = [];
 
-// 3. THE LIVE LISTENER (Updates the shop for everyone instantly)
+// 3. THE LIVE LISTENER (Syncs your shop across all devices)
 db.ref('products').on('value', (snapshot) => {
     const data = snapshot.val();
     products = data ? Object.values(data) : [];
     renderStore();
 });
 
-// 4. RENDER THE SHOP
+// 4. RENDER THE SHOPFRONT
 function renderStore(data = products) {
     const grid = document.getElementById('shop-grid');
     if(!grid) return;
@@ -45,7 +44,7 @@ function renderStore(data = products) {
     renderAdminList();
 }
 
-// 5. ADMIN: ADD NEW PRODUCT
+// 5. ADMIN: UPLOAD PRODUCT TO DATABASE
 function addNewProduct() {
     const name = document.getElementById('add-name').value;
     const price = document.getElementById('add-price').value;
@@ -63,10 +62,8 @@ function addNewProduct() {
         img: img || 'https://via.placeholder.com/400'
     };
 
-    // This PUSHES to the cloud for everyone
     db.ref('products/' + id).set(newProduct);
     
-    // Clear inputs
     ['add-name', 'add-price', 'add-img', 'add-desc'].forEach(id => {
         const el = document.getElementById(id);
         if(el) el.value = '';
@@ -74,14 +71,14 @@ function addNewProduct() {
     alert("PRODUCT UPLOADED TO CLOUD!");
 }
 
-// 6. ADMIN: DELETE PRODUCT
+// 6. ADMIN: REMOVE PRODUCT
 function removeProduct(id) {
     if(confirm("DELETE PRODUCT FOR EVERYONE?")) { 
         db.ref('products/' + id).remove();
     }
 }
 
-// 7. CART UTILITIES
+// 7. CART SYSTEM
 function addToCart(id) {
     const product = products.find(p => p.id === id);
     const exists = cart.find(c => c.id === id);
@@ -169,7 +166,7 @@ function closeThanks() {
     if(banner) banner.style.display = 'none'; 
 }
 
-// 8. ADMIN ACCESS TRIGGER
+// 8. OWNER LOGIN (Type anywhere on site)
 let inputBuffer = "";
 window.addEventListener("keydown", (e) => {
     inputBuffer += e.key;
