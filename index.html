@@ -14,7 +14,6 @@
             scroll-behavior: smooth;
         }
 
-        /* The Bold Modern Style from your examples */
         .modern-bold {
             font-family: 'Archivo Black', sans-serif;
             text-transform: uppercase;
@@ -47,8 +46,8 @@
             margin-top: 50px;
         }
         
-        input, textarea { background: #000; border: 1px solid #333; color: white; border-radius: 0px; }
-        input:focus, textarea:focus { border-color: #ffffff; outline: none; }
+        input, textarea, select { background: #000; border: 1px solid #333; color: white; border-radius: 0px; }
+        input:focus, textarea:focus, select:focus { border-color: #ffffff; outline: none; }
 
         #thanks-banner {
             display: none;
@@ -82,7 +81,7 @@
         <div class="flex flex-col items-center gap-3">
             <span style="font-family: 'Bodoni Moda', serif;" class="text-lg italic text-gray-300 opacity-90">Premium Earring Collection</span>
             <div class="border border-gray-900 px-4 py-1">
-                <span class="text-[10px] font-bold tracking-[0.2em] text-gray-400">LUCENA CITY, PH</span>
+                <span class="text-[10px] font-bold tracking-[0.2em] text-gray-400">GUINAYANGAN QUEZON, PH</span>
             </div>
         </div>
     </header>
@@ -98,7 +97,7 @@
         <div class="flex justify-center gap-4 flex-wrap opacity-70">
             <span class="payment-badge">GCASH</span>
             <span class="payment-badge">MAYA</span>
-            <span class="payment-badge">BANK</span>
+            <span class="payment-badge">BANK TRANSFER</span>
             <span class="payment-badge">COD</span>
         </div>
     </footer>
@@ -108,6 +107,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
             <input type="text" id="add-name" placeholder="PRODUCT NAME" class="p-4">
             <input type="number" id="add-price" placeholder="PRICE (PHP)" class="p-4">
+            <input type="number" id="add-stocks" placeholder="STOCK QUANTITY (e.g. 100)" class="p-4 md:col-span-2">
             <input type="text" id="add-img" placeholder="IMAGE URL" class="p-4 md:col-span-2">
             <textarea id="add-desc" placeholder="PRODUCT DESCRIPTION" class="p-4 md:col-span-2 h-24"></textarea>
             <button onclick="addNewProduct()" class="modern-bold bg-white text-black py-4 text-xl">Update Store</button>
@@ -128,8 +128,18 @@
                 <h2 class="modern-bold text-3xl">Your Selection</h2>
                 <button onclick="toggleCart()" class="text-white text-4xl">&times;</button>
             </div>
+            
             <div id="cart-items" class="flex-grow overflow-y-auto space-y-6 mb-8 pr-2"></div>
+
             <div class="border-t border-zinc-800 pt-8 space-y-6">
+                <div class="mb-4">
+                    <label class="text-[10px] text-zinc-500 uppercase tracking-widest block mb-2 text-center">Select Location</label>
+                    <select id="user-location" class="w-full bg-black border border-zinc-800 p-4 text-white text-xs uppercase tracking-widest outline-none">
+                        <option value="Brgy.Calimpak">Brgy.Calimpak</option>
+                        <option value="Brgy.Poblacion">Brgy.Poblacion</option>
+                    </select>
+                </div>
+
                 <div class="flex justify-between items-center">
                     <span class="modern-bold text-xl">TOTAL</span>
                     <span id="cart-total" class="modern-bold text-3xl">PHP 0.00</span>
@@ -140,8 +150,7 @@
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
-<script src="zora.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="zora.js"></script>
 </body>
 </html>
