@@ -16,19 +16,19 @@ const INSTAGRAM_USERNAME = "zora.ph_";
 let products = [];
 let cart = [];
 
-// SIMPLE POPUP CLOSE (No Storage)
+// 1. POPUP CONTROL
 function closeWelcome() {
     document.getElementById('welcome-modal').style.display = 'none';
 }
 
-// LIVE SYNC
+// 2. LIVE DATA SYNC
 db.ref('products').on('value', (snapshot) => {
     const data = snapshot.val();
     products = data ? Object.values(data) : [];
     renderStore();
 });
 
-// RENDER SHOP WITH STOCK CHECK
+// 3. RENDER SHOP (Includes Stock Overlays)
 function renderStore(data = products) {
     const grid = document.getElementById('shop-grid');
     if(!grid) return;
@@ -42,9 +42,9 @@ function renderStore(data = products) {
                 ${isOut ? '<div class="absolute inset-0 flex items-center justify-center bg-black/60 text-white modern-bold text-lg">SOLD OUT</div>' : ''}
             </div>
             <h3 class="modern-bold text-center text-xl mb-1 text-white uppercase">${p.name}</h3>
-            <p class="text-center text-[10px] text-zinc-500 mb-2 uppercase">${p.stocks || 0} left</p>
+            <p class="text-center text-[10px] text-zinc-500 mb-2 uppercase">${p.stocks || 0} items available</p>
             <p class="modern-bold text-center text-2xl mb-8">PHP ${p.price.toLocaleString()}</p>
-            <button onclick="${isOut ? '' : `addToCart(${p.id})`}" class="modern-bold w-full border border-white py-4 text-[10px] tracking-widest hover:bg-white hover:text-black">
+            <button onclick="${isOut ? '' : `addToCart(${p.id})`}" class="modern-bold w-full border border-white py-4 text-[10px] tracking-widest hover:bg-white hover:text-black transition-all">
                 ${isOut ? 'OUT OF STOCK' : 'ADD TO CART'}
             </button>
         </div>`
@@ -52,7 +52,7 @@ function renderStore(data = products) {
     renderAdminList();
 }
 
-// ADMIN: ADD PRODUCT WITH STOCKS
+// 4. ADMIN: ADD PRODUCT
 function addNewProduct() {
     const name = document.getElementById('add-name').value;
     const price = document.getElementById('add-price').value;
@@ -65,16 +65,16 @@ function addNewProduct() {
     db.ref('products/' + id).set({
         id, name, price: parseFloat(price), stocks: parseInt(stocks), desc, img: img || 'https://via.placeholder.com/400'
     });
-    alert("CLOUD UPDATED!");
+    alert("PRODUCT ADDED!");
 }
 
-// CART LOGIC WITH QUANTITY & STOCK VALIDATION
+// 5. CART LOGIC (With Max Stock Limit)
 function addToCart(id) {
     const product = products.find(p => p.id === id);
     const exists = cart.find(c => c.id === id);
     if(exists) {
         if(exists.qty < product.stocks) exists.qty++;
-        else alert("MAX STOCK REACHED!");
+        else alert("NO MORE STOCK AVAILABLE");
     } else {
         cart.push({...product, qty: 1});
     }
@@ -106,9 +106,9 @@ function updateCartUI() {
                     </div>
                 </div>
                 <div class="flex items-center gap-3 text-white">
-                    <button onclick="changeQty(${i.id}, -1)" class="w-6 h-6 border border-zinc-800">-</button>
-                    <span class="text-xs">${i.qty}</span>
-                    <button onclick="changeQty(${i.id}, 1)" class="w-6 h-6 border border-zinc-800">+</button>
+                    <button onclick="changeQty(${i.id}, -1)" class="w-8 h-8 border border-zinc-800 flex items-center justify-center">-</button>
+                    <span class="text-xs w-4 text-center">${i.qty}</span>
+                    <button onclick="changeQty(${i.id}, 1)" class="w-8 h-8 border border-zinc-800 flex items-center justify-center">+</button>
                 </div>
             </div>`).join('');
     }
@@ -116,29 +116,48 @@ function updateCartUI() {
     document.getElementById('cart-total').innerText = "PHP " + total.toLocaleString();
 }
 
+// 6. CHECKOUT: FIXED FOR IOS COPY/PASTE
 async function checkout() {
     if(cart.length === 0) return alert("EMPTY CART");
     const loc = document.getElementById('user-location').value;
 
-    const updates = {};
-    cart.forEach(item => {
-        const p = products.find(prod => prod.id === item.id);
-        updates[`/products/${item.id}/stocks`] = p.stocks - item.qty;
-    });
-    await db.ref().update(updates);
-
+    // A. PREPARE TEXT
     let text = `ORDER FROM ZORA.PH:\n\n`;
     cart.forEach(i => text += `• ${i.qty}x ${i.name} (PHP ${i.price * i.qty})\n`);
     text += `\nTotal: PHP ${cart.reduce((s, i) => s + (i.price * i.qty), 0)}\n\nLocation: ${loc} 📍`;
 
-    const area = document.createElement("textarea");
-    area.value = text; document.body.appendChild(area); area.select();
-    document.execCommand('copy'); document.body.removeChild(area);
+    // B. IMMEDIATE COPY (Before any async DB calls to satisfy iOS security)
+    try {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        textArea.setSelectionRange(0, 99999); // For mobile
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+    } catch (err) {
+        console.error('Copy failed', err);
+    }
 
-    alert(`✅ ORDER COPIED FOR ${loc.toUpperCase()}!\n\nPaste in our DMs now.`);
+    // C. UPDATE DATABASE STOCKS
+    const updates = {};
+    cart.forEach(item => {
+        const p = products.find(prod => prod.id === item.id);
+        if(p) updates[`/products/${item.id}/stocks`] = Math.max(0, p.stocks - item.qty);
+    });
+    db.ref().update(updates);
+
+    // D. REDIRECT
+    alert(`✅ ORDER PREPARED!\n\nLocation: ${loc.toUpperCase()}\n\nDetails have been COPIED. Please PASTE them in our Instagram messages!`);
     window.location.href = `https://www.instagram.com/${INSTAGRAM_USERNAME}/`;
     
-    cart = []; updateCartUI(); toggleCart();
+    cart = []; 
+    updateCartUI(); 
+    toggleCart();
     document.getElementById('thanks-banner').style.display = 'block';
 }
 
@@ -155,16 +174,17 @@ function renderAdminList() {
     if(!list) return;
     list.innerHTML = products.map(p => `
         <div class="flex justify-between py-2 border-b border-zinc-900">
-            <span class="text-[10px] uppercase text-white">${p.name} (${p.stocks})</span>
-            <button onclick="db.ref('products/${p.id}').remove()" class="text-red-900 text-[10px]">DELETE</button>
+            <span class="text-[10px] uppercase text-white">${p.name} (Qty: ${p.stocks})</span>
+            <button onclick="if(confirm('Delete?')) db.ref('products/${p.id}').remove()" class="text-red-900 text-[10px]">DELETE</button>
         </div>`).join('');
 }
 
+// 7. ADMIN TRIGGER
 let buffer = "";
 window.addEventListener("keydown", (e) => {
     buffer += e.key;
     if (buffer.includes("admin123")) {
         document.getElementById('admin-panel').style.display = 'block';
-        buffer = ""; alert("OWNER GRANTED");
+        buffer = ""; alert("OWNER ACCESS GRANTED");
     }
 });
