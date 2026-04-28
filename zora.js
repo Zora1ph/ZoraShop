@@ -119,14 +119,17 @@ function updateCartUI() {
 // 6. CHECKOUT: FIXED FOR IOS COPY/PASTE
 async function checkout() {
     if(cart.length === 0) return alert("EMPTY CART");
-    const loc = document.getElementById('user-location').value;
+    
+    // UPDATED: Forced location to Poblacion
+    const loc = "Poblacion";
+    const deliveryTime = "6:00 PM to 8:00 PM";
 
-    // A. PREPARE TEXT
+    // A. PREPARE TEXT (Updated branding and delivery info)
     let text = `ORDER FROM ZORA.PH:\n\n`;
     cart.forEach(i => text += `• ${i.qty}x ${i.name} (PHP ${i.price * i.qty})\n`);
-    text += `\nTotal: PHP ${cart.reduce((s, i) => s + (i.price * i.qty), 0)}\n\nLocation: ${loc} 📍`;
+    text += `\nTotal: PHP ${cart.reduce((s, i) => s + (i.price * i.qty), 0)}\n\nLocation: ${loc} 📍\nDelivery Time: ${deliveryTime} ⏰`;
 
-    // B. IMMEDIATE COPY (Before any async DB calls to satisfy iOS security)
+    // B. IMMEDIATE COPY
     try {
         const textArea = document.createElement("textarea");
         textArea.value = text;
@@ -136,7 +139,7 @@ async function checkout() {
         document.body.appendChild(textArea);
         textArea.focus();
         textArea.select();
-        textArea.setSelectionRange(0, 99999); // For mobile
+        textArea.setSelectionRange(0, 99999);
         document.execCommand('copy');
         document.body.removeChild(textArea);
     } catch (err) {
@@ -152,7 +155,7 @@ async function checkout() {
     db.ref().update(updates);
 
     // D. REDIRECT
-    alert(`✅ ORDER PREPARED!\n\nLocation: ${loc.toUpperCase()}\n\nDetails have been COPIED. Please PASTE them in our Instagram messages!`);
+    alert(`✅ ORDER PREPARED!\n\nLocation: ${loc.toUpperCase()}\nDelivery: ${deliveryTime}\n\nDetails have been COPIED. Please PASTE them in our Instagram messages!`);
     window.location.href = `https://www.instagram.com/${INSTAGRAM_USERNAME}/`;
     
     cart = []; 
