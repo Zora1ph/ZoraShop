@@ -1,6 +1,6 @@
 const firebaseConfig = {
   apiKey: "AIzaSyCa65Smn_puWDXiyU5p_K9JprJ0wk42CuE",
-  authDomain: "zora-shop.firebaseapp.app",
+  authDomain: "zora-shop.firebaseapp.com",
   databaseURL: "https://zora-shop-default-rtdb.asia-southeast1.firebasedatabase.app/", 
   projectId: "zora-shop",
   storageBucket: "zora-shop.firebasestorage.app",
@@ -108,7 +108,6 @@ async function checkout() {
     text += `\nTOTAL: PHP ${total.toLocaleString()}`;
     text += `\n\nLocation: ${loc} 📍\nDelivery Time: ${deliveryTime} ⏰`;
 
-    // COPY TO CLIPBOARD
     try {
         const textArea = document.createElement("textarea");
         textArea.value = text;
@@ -123,7 +122,6 @@ async function checkout() {
         document.body.removeChild(textArea);
     } catch (err) { console.error('Copy failed', err); }
 
-    // UPDATE FIREBASE STOCKS
     const updates = {};
     cart.forEach(item => {
         const p = products.find(prod => prod.id === item.id);
