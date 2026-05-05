@@ -1,6 +1,6 @@
 const firebaseConfig = {
   apiKey: "AIzaSyCa65Smn_puWDXiyU5p_K9JprJ0wk42CuE",
-  authDomain: "zora-shop.firebaseapp.com",
+  authDomain: "zora-shop.firebaseapp.app",
   databaseURL: "https://zora-shop-default-rtdb.asia-southeast1.firebasedatabase.app/", 
   projectId: "zora-shop",
   storageBucket: "zora-shop.firebasestorage.app",
@@ -16,23 +16,17 @@ const INSTAGRAM_USERNAME = "zora.ph_";
 let products = [];
 let cart = [];
 
-// 1. POPUP CONTROL
-function closeWelcome() {
-    document.getElementById('welcome-modal').style.display = 'none';
-}
+function closeWelcome() { document.getElementById('welcome-modal').style.display = 'none'; }
 
-// 2. LIVE DATA SYNC
 db.ref('products').on('value', (snapshot) => {
     const data = snapshot.val();
     products = data ? Object.values(data) : [];
     renderStore();
 });
 
-// 3. RENDER SHOP (Includes Stock Overlays)
 function renderStore(data = products) {
     const grid = document.getElementById('shop-grid');
     if(!grid) return;
-    
     grid.innerHTML = data.map(p => {
         const isOut = p.stocks <= 0;
         return `
@@ -49,26 +43,8 @@ function renderStore(data = products) {
             </button>
         </div>`
     }).join('');
-    renderAdminList();
 }
 
-// 4. ADMIN: ADD PRODUCT
-function addNewProduct() {
-    const name = document.getElementById('add-name').value;
-    const price = document.getElementById('add-price').value;
-    const stocks = document.getElementById('add-stocks').value || 0;
-    const img = document.getElementById('add-img').value;
-    const desc = document.getElementById('add-desc').value;
-
-    if(!name || !price) return alert("MISSING INFO");
-    const id = Date.now();
-    db.ref('products/' + id).set({
-        id, name, price: parseFloat(price), stocks: parseInt(stocks), desc, img: img || 'https://via.placeholder.com/400'
-    });
-    alert("PRODUCT ADDED!");
-}
-
-// 5. CART LOGIC (With Max Stock Limit)
 function addToCart(id) {
     const product = products.find(p => p.id === id);
     const exists = cart.find(c => c.id === id);
@@ -112,24 +88,27 @@ function updateCartUI() {
                 </div>
             </div>`).join('');
     }
+
     const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
-    document.getElementById('cart-total').innerText = "PHP " + total.toLocaleString();
+    const totalElement = document.getElementById('cart-total');
+    if(totalElement) {
+        totalElement.innerText = "PHP " + total.toLocaleString();
+    }
 }
 
-// 6. CHECKOUT: FIXED FOR IOS COPY/PASTE
 async function checkout() {
     if(cart.length === 0) return alert("EMPTY CART");
     
-    // UPDATED: Forced location to Poblacion
-    const loc = "Poblacion";
+    const loc = document.getElementById('user-location').value;
+    const total = cart.reduce((s, i) => s + (i.price * i.qty), 0);
     const deliveryTime = "6:00 PM to 8:00 PM";
 
-    // A. PREPARE TEXT (Updated branding and delivery info)
     let text = `ORDER FROM ZORA.PH:\n\n`;
     cart.forEach(i => text += `• ${i.qty}x ${i.name} (PHP ${i.price * i.qty})\n`);
-    text += `\nTotal: PHP ${cart.reduce((s, i) => s + (i.price * i.qty), 0)}\n\nLocation: ${loc} 📍\nDelivery Time: ${deliveryTime} ⏰`;
+    text += `\nTOTAL: PHP ${total.toLocaleString()}`;
+    text += `\n\nLocation: ${loc} 📍\nDelivery Time: ${deliveryTime} ⏰`;
 
-    // B. IMMEDIATE COPY
+    // COPY TO CLIPBOARD
     try {
         const textArea = document.createElement("textarea");
         textArea.value = text;
@@ -142,11 +121,9 @@ async function checkout() {
         textArea.setSelectionRange(0, 99999);
         document.execCommand('copy');
         document.body.removeChild(textArea);
-    } catch (err) {
-        console.error('Copy failed', err);
-    }
+    } catch (err) { console.error('Copy failed', err); }
 
-    // C. UPDATE DATABASE STOCKS
+    // UPDATE FIREBASE STOCKS
     const updates = {};
     cart.forEach(item => {
         const p = products.find(prod => prod.id === item.id);
@@ -154,8 +131,7 @@ async function checkout() {
     });
     db.ref().update(updates);
 
-    // D. REDIRECT
-    alert(`✅ ORDER PREPARED!\n\nLocation: ${loc.toUpperCase()}\nDelivery: ${deliveryTime}\n\nDetails have been COPIED. Please PASTE them in our Instagram messages!`);
+    alert(`✅ ORDER COPIED!\n\nTotal: PHP ${total.toLocaleString()}\n\nPaste in Instagram DMs!`);
     window.location.href = `https://www.instagram.com/${INSTAGRAM_USERNAME}/`;
     
     cart = []; 
@@ -164,30 +140,8 @@ async function checkout() {
     document.getElementById('thanks-banner').style.display = 'block';
 }
 
+function toggleCart() { document.getElementById('cart-modal').classList.toggle('hidden'); }
 function filterStore() {
     const q = document.getElementById('search-bar').value.toLowerCase();
     renderStore(products.filter(p => p.name.toLowerCase().includes(q)));
 }
-
-function toggleCart() { document.getElementById('cart-modal').classList.toggle('hidden'); }
-function closeThanks() { document.getElementById('thanks-banner').style.display = 'none'; }
-
-function renderAdminList() {
-    const list = document.getElementById('inventory-list');
-    if(!list) return;
-    list.innerHTML = products.map(p => `
-        <div class="flex justify-between py-2 border-b border-zinc-900">
-            <span class="text-[10px] uppercase text-white">${p.name} (Qty: ${p.stocks})</span>
-            <button onclick="if(confirm('Delete?')) db.ref('products/${p.id}').remove()" class="text-red-900 text-[10px]">DELETE</button>
-        </div>`).join('');
-}
-
-// 7. ADMIN TRIGGER
-let buffer = "";
-window.addEventListener("keydown", (e) => {
-    buffer += e.key;
-    if (buffer.includes("admin123")) {
-        document.getElementById('admin-panel').style.display = 'block';
-        buffer = ""; alert("OWNER ACCESS GRANTED");
-    }
-});
