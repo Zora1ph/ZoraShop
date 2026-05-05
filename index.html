@@ -23,6 +23,7 @@
 </head>
 <body class="p-4">
 
+    <!-- WELCOME MODAL -->
     <div id="welcome-modal">
         <div class="border border-white p-8 max-w-sm w-full text-center bg-black">
             <h2 class="modern-bold text-4xl mb-6">How to Order</h2>
@@ -36,11 +37,7 @@
         </div>
     </div>
 
-    <div id="thanks-banner" class="modern-bold text-sm">
-        🎉 ORDER PREPARED! PLEASE TAP "SEND" IN INSTAGRAM TO FINISH.
-        <button onclick="closeThanks()" class="ml-4 underline">CLOSE</button>
-    </div>
-
+    <!-- HEADER -->
     <header class="py-16 text-center">
         <h1 class="modern-bold text-6xl md:text-8xl mb-4">ZORA.ph</h1>
         <div class="flex flex-col items-center gap-3">
@@ -51,22 +48,15 @@
         </div>
     </header>
 
+    <!-- SEARCH -->
     <div class="max-w-md mx-auto mb-16 px-4">
         <input type="text" id="search-bar" onkeyup="filterStore()" placeholder="SEARCH COLLECTION..." class="w-full p-4 text-center font-bold text-xs tracking-widest uppercase">
     </div>
 
+    <!-- SHOP GRID -->
     <div class="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10 mb-24" id="shop-grid"></div>
 
-    <footer class="max-w-6xl mx-auto text-center mb-24 border-t border-zinc-900 pt-16">
-        <p class="modern-bold text-xs text-gray-500 mb-6 uppercase">Payment Methods</p>
-        <div class="flex justify-center gap-4 flex-wrap opacity-70">
-            <span class="payment-badge">GCASH</span>
-            <span class="payment-badge">MAYA</span>
-            <span class="payment-badge">BANK</span>
-            <span class="payment-badge">COD</span>
-        </div>
-    </footer>
-
+    <!-- ADMIN PANEL -->
     <section id="admin-panel" class="max-w-4xl mx-auto p-8 mb-24">
         <h2 class="modern-bold text-xl text-center mb-6 underline">Owner Management</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
@@ -78,15 +68,28 @@
             <button onclick="addNewProduct()" class="modern-bold bg-white text-black py-4 text-xl">Update Store</button>
         </div>
         <div id="inventory-list" class="space-y-2 border-t border-zinc-800 pt-6"></div>
-        <button onclick="document.getElementById('admin-panel').style.display='none'" class="mt-4 w-full text-[10px] text-gray-600 uppercase">Close</button>
+        <button onclick="document.getElementById('admin-panel').style.display='none'" class="mt-4 w-full text-[10px] text-gray-600 uppercase">Close Panel</button>
     </section>
 
+    <!-- FOOTER -->
+    <footer class="max-w-6xl mx-auto text-center mb-24 border-t border-zinc-900 pt-16">
+        <p class="modern-bold text-xs text-gray-500 mb-6 uppercase">Payment Methods</p>
+        <div class="flex justify-center gap-4 flex-wrap opacity-70 mb-10">
+            <span class="payment-badge">GCASH</span>
+            <span class="payment-badge">MAYA</span>
+            <span class="payment-badge">BANK</span>
+            <span class="payment-badge">COD</span>
+        </div>
+    </footer>
+
+    <!-- CART BUTTON -->
     <div id="cart-drawer" class="fixed bottom-8 right-8 z-50">
         <button onclick="toggleCart()" class="modern-bold bg-white text-black px-10 py-5 shadow-xl hover:scale-105 transition-transform text-xl">
             CART [<span id="cart-count">0</span>]
         </button>
     </div>
 
+    <!-- CART MODAL -->
     <div id="cart-modal" class="fixed inset-0 bg-black/95 z-[100] hidden flex items-center justify-center p-4">
         <div class="border border-white w-full max-w-lg p-10 max-h-[90vh] flex flex-col">
             <div class="flex justify-between items-center mb-8">
@@ -108,7 +111,7 @@
                     <span class="modern-bold text-xl">TOTAL</span>
                     <span id="cart-total" class="modern-bold text-3xl">PHP 0.00</span>
                 </div>
-                <button onclick="checkout()" class="modern-bold w-full bg-white text-black py-6 text-2xl hover:bg-gray-300 transition">Check Out</button>
+                <button onclick="checkout()" class="modern-bold w-full bg-white text-black py-6 text-2xl">Check Out</button>
             </div>
         </div>
     </div>
