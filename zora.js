@@ -18,12 +18,15 @@ let cart = [];
 
 function closeWelcome() { document.getElementById('welcome-modal').style.display = 'none'; }
 
+// --- DATABASE SYNC ---
 db.ref('products').on('value', (snapshot) => {
     const data = snapshot.val();
     products = data ? Object.values(data) : [];
     renderStore();
+    renderInventory();
 });
 
+// --- RENDER SHOP ---
 function renderStore(data = products) {
     const grid = document.getElementById('shop-grid');
     if(!grid) return;
@@ -45,6 +48,7 @@ function renderStore(data = products) {
     }).join('');
 }
 
+// --- CART FUNCTIONS ---
 function addToCart(id) {
     const product = products.find(p => p.id === id);
     const exists = cart.find(c => c.id === id);
@@ -88,17 +92,46 @@ function updateCartUI() {
                 </div>
             </div>`).join('');
     }
-
     const total = cart.reduce((sum, i) => sum + (i.price * i.qty), 0);
     const totalElement = document.getElementById('cart-total');
-    if(totalElement) {
-        totalElement.innerText = "PHP " + total.toLocaleString();
-    }
+    if(totalElement) totalElement.innerText = "PHP " + total.toLocaleString();
 }
 
+// --- ADMIN PANEL LOGIC ---
+function renderInventory() {
+    const list = document.getElementById('inventory-list');
+    if(!list) return;
+    list.innerHTML = products.map(p => `
+        <div class="flex justify-between items-center border-b border-zinc-900 py-2">
+            <span class="text-[10px] text-white uppercase font-bold">${p.name} (Qty: ${p.stocks})</span>
+            <button onclick="deleteProduct(${p.id})" class="text-red-500 text-[10px] uppercase font-bold">Delete</button>
+        </div>
+    `).join('');
+}
+
+function addNewProduct() {
+    const name = document.getElementById('add-name').value;
+    const price = parseInt(document.getElementById('add-price').value);
+    const stocks = parseInt(document.getElementById('add-stocks').value);
+    const img = document.getElementById('add-img').value;
+    const id = Date.now();
+    if(!name || !price || !img) return alert("Fill all fields");
+    db.ref('products/' + id).set({ id, name, price, stocks, img }).then(() => {
+        alert("Product Added to Zora.ph!");
+        document.getElementById('add-name').value = '';
+        document.getElementById('add-price').value = '';
+        document.getElementById('add-stocks').value = '';
+        document.getElementById('add-img').value = '';
+    });
+}
+
+function deleteProduct(id) {
+    if(confirm("Delete this item?")) db.ref('products/' + id).remove();
+}
+
+// --- CHECKOUT ---
 async function checkout() {
     if(cart.length === 0) return alert("EMPTY CART");
-    
     const loc = document.getElementById('user-location').value;
     const total = cart.reduce((s, i) => s + (i.price * i.qty), 0);
     const deliveryTime = "6:00 PM to 8:00 PM";
@@ -108,19 +141,12 @@ async function checkout() {
     text += `\nTOTAL: PHP ${total.toLocaleString()}`;
     text += `\n\nLocation: ${loc} 📍\nDelivery Time: ${deliveryTime} ⏰`;
 
-    try {
-        const textArea = document.createElement("textarea");
-        textArea.value = text;
-        textArea.style.position = "fixed";
-        textArea.style.left = "-9999px";
-        textArea.style.top = "-9999px";
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        textArea.setSelectionRange(0, 99999);
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-    } catch (err) { console.error('Copy failed', err); }
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
 
     const updates = {};
     cart.forEach(item => {
@@ -129,14 +155,30 @@ async function checkout() {
     });
     db.ref().update(updates);
 
-    alert(`✅ ORDER COPIED!\n\nTotal: PHP ${total.toLocaleString()}\n\nPaste in Instagram DMs!`);
+    alert(`✅ ORDER COPIED!\n\nPaste in Instagram DMs!`);
     window.location.href = `https://www.instagram.com/${INSTAGRAM_USERNAME}/`;
-    
-    cart = []; 
-    updateCartUI(); 
-    toggleCart();
-    document.getElementById('thanks-banner').style.display = 'block';
 }
+
+// --- SECRET PASSWORD: Zora005 ---
+let inputBuffer = "";
+const secretCode = "Zora005";
+
+document.addEventListener('keydown', (e) => {
+    // Ignore typing if you're in the search bar or admin inputs
+    if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+
+    inputBuffer += e.key;
+    if (inputBuffer.length > secretCode.length) {
+        inputBuffer = inputBuffer.substring(inputBuffer.length - secretCode.length);
+    }
+
+    if (inputBuffer === secretCode) {
+        document.getElementById('admin-panel').style.display = 'block';
+        document.getElementById('admin-panel').scrollIntoView();
+        inputBuffer = "";
+        alert("Access Granted: Welcome Zora Admin.");
+    }
+});
 
 function toggleCart() { document.getElementById('cart-modal').classList.toggle('hidden'); }
 function filterStore() {
