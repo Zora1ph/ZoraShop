@@ -302,7 +302,7 @@ async function checkout() {
     );
 
     window.open(
-        `https://instagram.com/${https://www.instagram.com/zora.ph_}`,
+        `https://instagram.com/${INSTAGRAM_USERNAME}`,
         '_blank'
     );
 }
