@@ -1,0 +1,9 @@
+# Ignore OS / editor junk
+.DS_Store
+Thumbs.db
+Desktop.ini
+.vscode/
+*.log
+
+# Keep products.json tracked so customers see your catalog
+!products.json
