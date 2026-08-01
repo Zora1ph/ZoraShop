@@ -1,0 +1,14 @@
+{
+  "instagram": "zora.ph_",
+  "facebook": "Zora.Official.ph",
+  "facebookUrl": "https://www.facebook.com/share/1EtKmbeuGo/?mibextid=wwXIfr",
+  "promos": [
+    {
+      "code": "ZORA10",
+      "type": "percent",
+      "value": 10,
+      "minOrder": 500,
+      "maxRedemptions": 100
+    }
+  ]
+}
