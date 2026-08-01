@@ -30,6 +30,7 @@ create table if not exists store_settings (
 -- If store_settings already exists, add new columns:
 alter table store_settings add column if not exists facebook text not null default 'Zora.Official.ph';
 alter table store_settings add column if not exists facebook_url text not null default 'https://www.facebook.com/share/1EtKmbeuGo/?mibextid=wwXIfr';
+alter table store_settings add column if not exists hero_slides jsonb not null default '[]'::jsonb;
 
 alter table products enable row level security;
 alter table store_settings enable row level security;
