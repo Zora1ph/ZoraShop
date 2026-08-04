@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zora.ph | Official Shop</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:wght@400;600;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Welcome Modal -->
+  <div id="welcome-modal" class="modal-overlay">
+    <div class="modal-box welcome-box">
+      <p class="welcome-greeting">WELCOME TO</p>
+      <h2 class="welcome-brand logo-serif">ZORA</h2>
+      <p class="welcome-sub">Premium Collection</p>
+
+      <h3 class="welcome-how">HOW TO ORDER</h3>
+      <ol class="order-steps">
+        <li>ADD ITEMS TO CART</li>
+        <li>FILL IN YOUR DETAILS</li>
+        <li>COMPLETE CHECKOUT IN-APP</li>
+        <li>TRACK YOUR ORDER FROM YOUR ACCOUNT</li>
+      </ol>
+      <button id="start-shopping-btn" class="btn btn-solid" onclick="sessionStorage.setItem('zora_welcome_seen','1');document.getElementById('welcome-modal').classList.add('hidden');">START SHOPPING</button>
+    </div>
+  </div>
+
+  <!-- Product Detail Modal -->
+  <div id="product-modal" class="modal-overlay hidden">
+    <div class="modal-box product-detail-box">
+      <div class="product-detail-header">
+        <button class="close-btn" id="close-product">&times;</button>
+      </div>
+      <div class="product-detail-content">
+        <div class="product-gallery">
+          <div class="main-image-wrap" id="detail-gallery">
+            <img id="detail-main-img" src="" alt="">
+            <p class="gallery-swipe-hint hidden" id="gallery-hint">← SWIPE FOR ANGLES →</p>
+          </div>
+          <div class="angle-thumbs" id="angle-thumbs"></div>
+        </div>
+        <div class="product-detail-info">
+          <h2 id="detail-name"></h2>
+          <p id="detail-subtitle" class="subtitle"></p>
+          <p id="detail-category" class="detail-meta"></p>
+          <p id="detail-stock" class="stock"></p>
+          <div id="detail-price-wrap" class="price-wrap"></div>
+          <div id="size-selector" class="size-selector hidden">
+            <p class="size-label">SELECT SIZE *</p>
+            <div id="size-options" class="size-options"></div>
+          </div>
+          <div class="detail-quantity">
+            <span>QUANTITY</span>
+            <div class="quantity-control">
+              <button type="button" id="detail-qty-minus" aria-label="Decrease quantity">−</button>
+              <span id="detail-qty">1</span>
+              <button type="button" id="detail-qty-plus" aria-label="Increase quantity">+</button>
+            </div>
+          </div>
+          <button type="button" id="detail-save-cart" class="btn btn-solid detail-save-cart">SAVE TO CART</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Added-to-cart confirmation -->
+  <div id="cart-confirmation" class="modal-overlay hidden">
+    <div class="modal-box cart-confirmation-box">
+      <button class="close-btn confirmation-close" id="close-cart-confirmation">&times;</button>
+      <p class="confirmation-eyebrow">ADDED TO YOUR CART</p>
+      <h2 id="confirmation-name"></h2>
+      <p id="confirmation-summary" class="confirmation-summary"></p>
+      <button type="button" id="confirmation-cart-btn" class="btn btn-solid">VIEW CART</button>
+      <button type="button" id="confirmation-continue-btn" class="btn btn-outline">CONTINUE SHOPPING</button>
+    </div>
+  </div>
+
+  <!-- Cart Modal -->
+  <div id="cart-modal" class="modal-overlay hidden">
+    <div class="modal-box cart-box">
+      <div class="cart-header">
+        <h2>Your Cart</h2>
+        <button class="close-btn" id="close-cart">&times;</button>
+      </div>
+      <div id="cart-items" class="cart-items"></div>
+      <div class="cart-summary">
+        <div class="cart-subtotal hidden" id="cart-subtotal-row">
+          <span>SUBTOTAL</span>
+          <span id="cart-subtotal">PHP 0.00</span>
+        </div>
+        <div class="cart-discount hidden" id="cart-discount-row">
+          <span>DISCOUNT</span>
+          <span id="cart-discount">- PHP 0.00</span>
+        </div>
+        <div class="cart-total">
+          <span>TOTAL</span>
+          <span id="cart-total">PHP 0.00</span>
+        </div>
+        <p class="cart-total-quantity">TOTAL QUANTITY <span id="cart-total-quantity">0</span></p>
+      </div>
+      <button type="button" class="btn btn-solid cart-checkout-btn" id="cart-checkout-btn">CHECKOUT</button>
+    </div>
+  </div>
+
+  <!-- Checkout details -->
+  <div id="checkout-modal" class="modal-overlay hidden">
+    <div class="modal-box checkout-box">
+      <div class="checkout-header">
+        <div>
+          <p class="confirmation-eyebrow">ORDER DETAILS</p>
+          <h2>CHECKOUT</h2>
+        </div>
+        <button class="close-btn" id="close-checkout">&times;</button>
+      </div>
+      <p class="checkout-caution">Please review your order details before placing your order. Payments are processed securely in-site.</p>
+      <form id="checkout-form">
+        <input type="text" name="name" placeholder="Full Name *" required>
+        <input type="tel" name="phone" placeholder="Phone Number *" required>
+        <textarea name="address" placeholder="Shipping Address *" rows="3" required></textarea>
+        <div class="payment-methods-form">
+          <p class="payment-methods-label">PAYMENT METHOD *</p>
+          <label class="radio-option"><input type="radio" name="paymentMethod" value="GCash" checked> GCash</label>
+          <label class="radio-option"><input type="radio" name="paymentMethod" value="Maya"> Maya</label>
+          <label class="radio-option"><input type="radio" name="paymentMethod" value="Bank Transfer"> Bank Transfer</label>
+          <p class="payment-help-text">Choose a payment method and follow the instructions after placing your order. A QR code will be shown to complete payment.</p>
+        </div>
+        <input type="text" name="notes" placeholder="Notes (Optional)">
+        <div class="promo-row">
+          <input type="text" name="promo" id="promo-input" placeholder="Promo Code (Optional)">
+          <button type="button" id="apply-promo-btn" class="btn btn-outline promo-btn">APPLY</button>
+        </div>
+        <p id="promo-message" class="promo-message hidden"></p>
+        <p class="checkout-note">After you place the order, complete payment on the next screen. You can track the order from your account or the Orders page.</p>
+        <button type="submit" class="btn btn-solid" id="checkout-submit-btn">PLACE ORDER</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Order Toast -->
+  <div id="order-toast" class="redirect-toast hidden">
+    <p class="toast-title" id="toast-title">ORDER CREATED</p>
+  <p class="toast-text">Your order was created. Proceed to payment to complete your purchase or continue shopping.</p>
+  <div style="display:flex;gap:8px;">
+    <button type="button" id="goto-payment" class="btn btn-solid" style="flex:1">PROCEED TO PAYMENT</button>
+    <button type="button" id="continue-shopping-btn" class="btn btn-outline" style="flex:1">CONTINUE SHOPPING</button>
+  </div>
+  </div>
+
+  <!-- Account Modal -->
+  <div id="account-modal" class="modal-overlay hidden">
+    <div class="modal-box account-box">
+      <button class="close-btn" id="close-account">&times;</button>
+      <div id="account-logged-out">
+        <h2>Account</h2>
+        <p>Log in or register to save your cart and see your orders.</p>
+        <form id="account-login-form" class="account-form">
+          <input type="email" name="email" placeholder="Email address *" required>
+          <input type="password" name="password" placeholder="Password *" required>
+          <div class="account-actions">
+            <button type="submit" class="btn btn-solid">LOGIN</button>
+            <button type="button" class="btn btn-outline" id="show-register">REGISTER</button>
+          </div>
+        </form>
+        <form id="account-register-form" class="account-form hidden">
+          <input type="email" name="email" placeholder="Email address *" required>
+          <input type="password" name="password" placeholder="Password *" required>
+          <input type="password" name="confirmPassword" placeholder="Confirm password *" required>
+          <div class="account-actions">
+            <button type="submit" class="btn btn-solid">CREATE ACCOUNT</button>
+            <button type="button" class="btn btn-outline" id="show-login">BACK TO LOGIN</button>
+          </div>
+        </form>
+        <p class="account-hint">After registering, your cart and order history will be saved under your account.</p>
+      </div>
+      <div id="account-logged-in" class="hidden">
+        <h2>Welcome back</h2>
+        <p id="account-welcome"></p>
+        <div class="account-summary">
+          <span id="account-order-count">0 orders</span>
+          <span id="account-email"></span>
+        </div>
+        <div id="account-orders"></div>
+        <button type="button" id="logout-btn" class="btn btn-outline">Sign out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Support Modal -->
+  <div id="support-modal" class="modal-overlay hidden">
+    <div class="modal-box support-box">
+      <button class="close-btn" id="close-support">&times;</button>
+      <h2><img src="support-logo.svg" alt="Support" class="support-logo" style="height:28px;vertical-align:middle;margin-right:8px">Customer Service</h2>
+      <p>Send us a message and we will reply as soon as possible.</p>
+      <form id="support-form">
+        <input type="text" name="name" placeholder="Your name *" required>
+        <input type="email" name="email" placeholder="Email address *" required>
+        <textarea name="message" placeholder="How can we help you?" rows="4" required></textarea>
+        <button type="submit" class="btn btn-solid">SEND MESSAGE</button>
+      </form>
+      <p class="support-note">Or contact us directly at zoraofficial005@gmail.com</p>
+    </div>
+  </div>
+
+  <!-- Payment Instructions Modal -->
+  <div id="payment-modal" class="modal-overlay hidden">
+    <div class="modal-box payment-box">
+      <button class="close-btn" id="close-payment">&times;</button>
+      <h2>Complete Payment</h2>
+      <p id="payment-instructions">Select a payment method and then complete the payment.</p>
+      <div id="payment-details" class="payment-details">
+        <!-- QR code will be injected here by app.js -->
+        <div id="payment-qr-wrap" style="text-align:center;margin-top:0.5rem">
+          <img id="payment-qr" src="" alt="Payment QR" style="max-width:320px;border:1px solid rgba(255,255,255,0.12);padding:6px;background:#fff;">
+          <p style="margin-top:8px;color:var(--grey);font-size:0.9rem">Send payment and include your email as reference. For questions, email <strong>zoraofficial005@gmail.com</strong></p>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button type="button" id="payment-confirm-btn" class="btn btn-solid" style="flex:1">I HAVE PAID</button>
+        <button type="button" id="payment-close-continue" class="btn btn-outline" style="flex:1">CLOSE & CONTINUE SHOPPING</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Panel -->
+  <div id="admin-panel" class="admin-panel hidden">
+    <div class="admin-header">
+      <h2>ADMIN PANEL</h2>
+      <button class="close-btn" id="close-admin">&times;</button>
+    </div>
+
+    <div id="publish-banner" class="publish-banner hidden"></div>
+
+    <div class="publish-box">
+      <p class="publish-help">
+        New products only show for <strong>you</strong> until you save them to your database.
+        Once Supabase is configured, the site reads from the database directly.
+      </p>
+      <button type="button" id="publish-btn" class="btn btn-solid">SAVE CHANGES</button>
+      <ol class="publish-steps">
+        <li>Click SAVE CHANGES to write products and settings to Supabase</li>
+        <li>Keep the JSON download as a backup if you also want local files</li>
+        <li>Refresh the site to confirm the new data is live</li>
+      </ol>
+    </div>
+
+    <div class="admin-tabs">
+      <button class="admin-tab active" data-tab="add">ADD</button>
+      <button class="admin-tab" data-tab="manage">MANAGE</button>
+      <button class="admin-tab" data-tab="discounts">DISCOUNTS</button>
+      <button class="admin-tab" data-tab="content">CONTENT</button>
+      <button class="admin-tab" data-tab="settings">SETTINGS</button>
+    </div>
+    <div id="tab-add" class="admin-tab-content">
+      <form id="add-product-form">
+        <input type="text" name="name" placeholder="Product Name *" required>
+        <input type="text" name="subtitle" placeholder="Subtitle (e.g. SILVER)">
+        <select name="category" required>
+          <option value="">Category *</option>
+          <option value="bracelets">Bracelets</option>
+          <option value="rings">Rings</option>
+          <option value="earrings">Earrings</option>
+          <option value="necklaces">Necklaces</option>
+        </select>
+        <input type="number" name="price" placeholder="Price (PHP) *" min="1" required>
+        <input type="number" name="stock" placeholder="Stock *" min="0" required id="add-stock-input">
+        <label class="checkbox-label">
+          <input type="checkbox" name="requiresSize" id="add-requires-size">
+          <span>Requires size selection</span>
+        </label>
+        <input type="text" name="sizes" placeholder="Sizes (comma-separated, e.g. 17CM, 19CM)" id="add-sizes-input">
+        <p class="field-hint" id="size-limit-hint">Sizes cannot exceed stock amount.</p>
+        <label class="checkbox-label">
+          <input type="checkbox" name="discountActive" id="add-discount-active">
+          <span>Product on sale</span>
+        </label>
+        <input type="number" name="discountPercent" placeholder="Discount % (e.g. 20)" min="0" max="99">
+        <label class="file-label">
+          <span>Angle 1 (Main) *</span>
+          <input type="file" name="angle1" accept="image/*" required>
+        </label>
+        <label class="file-label">
+          <span>Angle 2</span>
+          <input type="file" name="angle2" accept="image/*">
+        </label>
+        <label class="file-label">
+          <span>Angle 3</span>
+          <input type="file" name="angle3" accept="image/*">
+        </label>
+        <label class="file-label">
+          <span>Angle 4</span>
+          <input type="file" name="angle4" accept="image/*">
+        </label>
+        <button type="submit" class="btn btn-solid">ADD PRODUCT</button>
+      </form>
+    </div>
+    <div id="tab-manage" class="admin-tab-content hidden">
+      <div id="admin-product-list"></div>
+    </div>
+    <div id="tab-discounts" class="admin-tab-content hidden">
+      <form id="discounts-form">
+        <p class="admin-section-label">PROMO CODES (checkout)</p>
+        <div id="promo-list"></div>
+        <button type="button" id="add-promo-btn" class="btn btn-outline">+ ADD PROMO CODE</button>
+        <button type="submit" class="btn btn-solid">SAVE DISCOUNTS</button>
+      </form>
+    </div>
+    <div id="tab-content" class="admin-tab-content hidden">
+      <p class="admin-section-label">HERO SLIDES</p>
+      <p class="publish-help">Preview and customize the large images shown at the top of your shop.</p>
+      <div id="hero-slides-editor"></div>
+      <button type="button" id="add-hero-slide-btn" class="btn btn-outline">+ ADD SLIDE</button>
+
+      <p class="admin-section-label content-section-heading">COLLECTIONS</p>
+      <p class="publish-help">Change the collection image, name, and category customers use when browsing.</p>
+      <div id="collections-editor"></div>
+      <button type="button" id="save-content-btn" class="btn btn-solid">SAVE CONTENT</button>
+    </div>
+    <div id="tab-settings" class="admin-tab-content hidden">
+      <form id="settings-form">
+        <input type="text" name="instagram" placeholder="Instagram Username (without @)" id="setting-instagram">
+        <input type="text" name="facebook" placeholder="Facebook Page (e.g. Zora.Official.ph)" id="setting-facebook">
+
+        <label class="admin-field">
+          <span>NEW ADMIN PASSWORD</span>
+          <input type="password" name="adminPassword" placeholder="Leave blank to keep current password" id="setting-password">
+          <small>Use at least 6 characters. Leave blank if you do not want to change it.</small>
+        </label>
+        <label class="admin-field">
+          <span>CONFIRM NEW PASSWORD</span>
+          <input type="password" name="adminPasswordConfirm" placeholder="Type the new password again" id="setting-password-confirm">
+        </label>
+        <button type="submit" class="btn btn-solid">SAVE SETTINGS</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin Login -->
+  <div id="admin-login" class="modal-overlay hidden">
+    <div class="modal-box welcome-box">
+      <h2>ADMIN LOGIN</h2>
+      <form id="admin-login-form">
+        <input type="password" name="password" placeholder="Password" required>
+        <button type="submit" class="btn btn-solid">LOGIN</button>
+      </form>
+      <button class="close-btn" id="close-admin-login">&times;</button>
+    </div>
+  </div>
+
+  <!-- Sticky Header -->
+  <header class="site-header">
+    <span class="header-spacer" aria-hidden="true"></span>
+    <h1 class="logo logo-serif" id="logo-trigger">ZORA</h1>
+    <div class="header-actions">
+      <a class="header-icon" href="https://www.instagram.com/zora.ph_/" target="_blank" rel="noopener" aria-label="Instagram">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="4" ry="4"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><path d="M17.5 6.5h.01"/></svg>
+      </a>
+      <a class="header-icon" href="https://www.facebook.com/Zora.Official.ph" target="_blank" rel="noopener" aria-label="Facebook">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M18 2h-3a4 4 0 0 0-4 4v3H8v4h3v8h4v-8h3l1-4h-4V6a1 1 0 0 1 1-1h3z"/></svg>
+      </a>
+      <a class="header-icon" id="help-btn" href="#" aria-label="Customer Service" title="Customer Service">
+        <img src="support-logo.svg" alt="Support" class="support-logo" />
+      </a>
+      <button class="header-icon" id="account-btn" aria-label="My Account">👤</button>
+      <button class="header-icon" id="search-toggle" aria-label="Search">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      </button>
+      <button class="header-icon cart-header-btn" id="cart-btn" aria-label="Cart">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span class="cart-badge" id="cart-count">0</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Search Bar (toggle) -->
+  <div id="search-bar" class="search-bar hidden">
+    <input type="text" id="search-input" placeholder="Search collection...">
+  </div>
+
+  <!-- Hero Carousel -->
+  <section class="hero-section" id="hero-section">
+    <div class="hero-carousel" id="hero-carousel">
+      <div class="hero-slide active">
+        <img src="https://images.unsplash.com/photo-1515562141203-7a88fb7ce338?w=1200&h=700&fit=crop" alt="Zora Collection">
+        <div class="hero-overlay">
+          <p class="hero-tag">ZORA.PH SIGNATURE SERIES</p>
+          <h2 class="hero-title">FALL 2026 COLLECTION</h2>
+          <p class="hero-sub">Exquisite Lucena City Craftsmanship</p>
+        </div>
+      </div>
+      <div class="hero-slide">
+        <img src="https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=1200&h=700&fit=crop" alt="Zora Jewelry">
+        <div class="hero-overlay">
+          <p class="hero-tag">SIGNATURE SERIES</p>
+          <h2 class="hero-title">WEAR EVERY DAY</h2>
+          <p class="hero-sub">Shine Every Moment</p>
+        </div>
+      </div>
+      <div class="hero-slide">
+        <img src="https://images.unsplash.com/photo-1611591437281-460bfbead0db?w=1200&h=700&fit=crop" alt="Zora Rings">
+        <div class="hero-overlay">
+          <p class="hero-tag">NEW ARRIVALS</p>
+          <h2 class="hero-title">PREMIUM CHARMS</h2>
+          <p class="hero-sub">Nationwide Shipping Available</p>
+        </div>
+      </div>
+    </div>
+    <button class="hero-arrow hero-arrow--prev" id="hero-prev" aria-label="Previous">‹</button>
+    <button class="hero-arrow hero-arrow--next" id="hero-next" aria-label="Next">›</button>
+    <div class="hero-dots" id="hero-dots"></div>
+  </section>
+
+  <main>
+    <!-- Collections -->
+    <section class="section-block">
+      <div class="section-header">
+        <h2 class="section-title">COLLECTIONS</h2>
+        <button class="section-link" data-category="all">View all</button>
+      </div>
+      <div class="collections-grid" id="collections-grid">
+      </div>
+    </section>
+
+    <!-- Category Tabs -->
+    <section class="section-block">
+      <div class="section-header">
+        <h2 class="section-title" id="shop-section-title">ALL JEWELLERY</h2>
+      </div>
+      <nav class="category-tabs" id="category-tabs">
+        <button class="category-tab active" data-category="all">ALL</button>
+        <button class="category-tab" data-category="bracelets">BRACELETS</button>
+        <button class="category-tab" data-category="rings">RINGS</button>
+        <button class="category-tab" data-category="earrings">EARRINGS</button>
+        <button class="category-tab" data-category="necklaces">NECKLACES</button>
+      </nav>
+      <div id="product-grid" class="product-grid"></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <h3 class="logo-serif footer-logo">ZORA</h3>
+    <p class="footer-tagline">EST. 2026</p>
+    <p class="footer-tagline">WEAR EVERY DAY. SHINE EVERY MOMENT.</p>
+    <!-- Footer contact removed per request -->
+    <h3 class="footer-payments-title">PAYMENT METHODS</h3>
+    <div class="payment-methods">
+    <span class="payment-badge">GCASH</span>
+    <span class="payment-badge">MAYA</span>
+    <span class="payment-badge">BANK</span>
+    </div>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
