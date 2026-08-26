@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48" role="img" aria-labelledby="title">
+  <title id="title">Customer service</title>
+  <path d="M10 18c0-8 6.3-14 14-14s14 6 14 14c0 5.2-2.4 9.6-6.2 12.2L34 40l-8.2-4.4C24.6 35.8 24.3 36 24 36c-7.7 0-14-6-14-18z" fill="none" stroke="#111" stroke-width="2.4" stroke-linejoin="round"/>
+  <circle cx="18.5" cy="20" r="1.6" fill="#111"/>
+  <circle cx="24" cy="20" r="1.6" fill="#111"/>
+  <circle cx="29.5" cy="20" r="1.6" fill="#111"/>
+</svg>
