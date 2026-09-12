@@ -156,9 +156,11 @@ create policy "Allow public update access" on accounts for update using (true) w
 drop policy if exists "Allow public read access" on orders;
 drop policy if exists "Allow public insert access" on orders;
 drop policy if exists "Allow public update access" on orders;
+drop policy if exists "Allow public delete access" on orders;
 create policy "Allow public read access" on orders for select using (true);
 create policy "Allow public insert access" on orders for insert with check (true);
 create policy "Allow public update access" on orders for update using (true) with check (true);
+create policy "Allow public delete access" on orders for delete using (true);
 
 drop policy if exists "Allow public read access" on support_messages;
 drop policy if exists "Allow public insert access" on support_messages;
@@ -169,7 +171,7 @@ grant usage on schema public to anon, authenticated;
 grant select, insert, update, delete on products to anon, authenticated;
 grant select, insert, update, delete on store_settings to anon, authenticated;
 grant select, insert, update on accounts to anon, authenticated;
-grant select, insert, update on orders to anon, authenticated;
+grant select, insert, update, delete on orders to anon, authenticated;
 grant select, insert on support_messages to anon, authenticated;
 
 create table if not exists site_presence (

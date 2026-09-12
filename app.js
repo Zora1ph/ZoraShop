@@ -1070,7 +1070,7 @@
         `/rest/v1/orders?user_email=eq.${encodeURIComponent(email)}&select=${ORDER_COLS}&order=created_at.desc`
       );
       if (Array.isArray(rows)) {
-        orders = rows.map(slimOrder);
+        orders = rows.map(slimOrder).filter((o) => !isCancelledStatus(o.status));
         try {
           localStorage.setItem(key, JSON.stringify(orders));
         } catch {
@@ -1087,7 +1087,7 @@
       /* local fallback */
     }
     try {
-      orders = JSON.parse(localStorage.getItem(key) || '[]');
+      orders = JSON.parse(localStorage.getItem(key) || '[]').filter((o) => !isCancelledStatus(o?.status));
     } catch {
       orders = [];
     }
@@ -3271,6 +3271,8 @@
     return s.includes('paid') && !s.includes('unpaid');
   };
 
+  const isCancelledStatus = (status) => /fail|cancel|declin|void/i.test(String(status || ''));
+
   const setPaymentWaitUi = (paid, waitingText) => {
     const waitEl = $('#paymentWaitStatus');
     if (!waitEl) return;
@@ -3765,9 +3767,24 @@
 
   const releaseOrderHold = async (order, reason) => {
     if (!order || isPaidStatus(order.status)) return false;
-    if (String(parseOrderNotes(order.notes).hold) !== '1') return false;
+    const meta = parseOrderNotes(order.notes);
+    if (String(meta.hold) !== '1') return false;
     await restoreOrderStock(order.items || []);
-    await patchOrderHold(order, '0', reason === 'failed' ? 'Failed' : order.status);
+    const notes = serializeOrderNotes(order.notes, { hold: '0', stockback: '1' });
+    order.notes = notes;
+    if (reason === 'failed') order.status = 'Failed';
+    const body = { notes };
+    if (reason === 'failed') body.status = 'Failed';
+    try {
+      await supaRequest(`/rest/v1/orders?id=eq.${encodeURIComponent(order.id)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+    } catch {
+      /* ignore */
+    }
+    storeLocalOrder(order);
     return true;
   };
 
@@ -4478,6 +4495,13 @@
     order.user_email = order.user_email || '';
 
     if (/fail|cancel/i.test(String(status))) {
+      if (isPaidStatus(order.status)) {
+        showToast('This order is already paid. Stock stays sold.');
+        card?.querySelectorAll('.mark-paid-btn, .mark-failed-btn').forEach((btn) => {
+          btn.disabled = false;
+        });
+        return;
+      }
       try {
         const rows = await supaRequest(
           `/rest/v1/orders?id=eq.${encodeURIComponent(orderId)}&select=id,items,notes,status`
@@ -4490,14 +4514,42 @@
       } catch {
         /* restore without items if needed */
       }
-      const released = await releaseOrderHold(order, 'failed');
-      if (!released) await patchOrderHold(order, '0', 'Failed');
-      showToast('Payment failed. The piece is back in stock.');
+      const metaNow = parseOrderNotes(order.notes);
+      const alreadyBack = String(metaNow.stockback) === '1';
+      const holdOff = String(metaNow.hold) === '0';
+      if (!alreadyBack && !holdOff) {
+        await restoreOrderStock(order.items || []);
+      }
+      order.status = 'Failed';
+      order.notes = serializeOrderNotes(order.notes, { hold: '0', stockback: '1' });
+      try {
+        await supaRequest(`/rest/v1/orders?id=eq.${encodeURIComponent(orderId)}`, {
+          method: 'DELETE'
+        });
+      } catch {
+        try {
+          await supaRequest(`/rest/v1/orders?id=eq.${encodeURIComponent(orderId)}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'Failed', notes: order.notes })
+          });
+        } catch {
+          showToast('Could not cancel that order. Try again.');
+          card?.querySelectorAll('.mark-paid-btn, .mark-failed-btn').forEach((btn) => {
+            btn.disabled = false;
+          });
+          return;
+        }
+      }
+      document.querySelectorAll(`.order-card[data-order-id="${CSS.escape(String(orderId))}"]`).forEach((el) => {
+        el.remove();
+      });
+      showToast('Payment not accepted. The piece is back in stock for add to cart.');
       sendStoreEmail({
         subject: `Zora order ${order.id} — Failed — ${order.name} / ${order.phone}`,
         name: order.name,
         email: order.user_email || STORE_EMAIL,
-        message: buildOrderMessage({ ...order, status: 'Failed' }, 'Failed — piece returned to stock'),
+        message: buildOrderMessage({ ...order, status: 'Failed' }, 'Failed — piece returned to stock. Order removed.'),
         extra: { payment: order.payment_method, order_id: order.id, paid: 'no' }
       });
       refreshCatalogStock();
@@ -4547,10 +4599,6 @@
       adminOrderSubtab = 'paid';
       syncOrderSubtabs();
       renderAdminOrders();
-    } else if (status === 'Failed') {
-      adminOrderSubtab = 'unpaid';
-      syncOrderSubtabs();
-      renderAdminOrders();
     }
   };
 
@@ -4569,8 +4617,8 @@
         adminOrderSubtab === 'paid'
           ? 'Paid orders. Scan the J&T waybill so tracking goes live for the customer.'
           : adminOrderSubtab === 'unpaid'
-            ? 'Unpaid checkouts. Tap Mark paid as soon as GCash, Maya, or Bank payment arrives.'
-            : 'All checkouts. Unpaid stay in Unpaid orders. Marked paid move to Paid orders.';
+            ? 'Unpaid checkouts. Mark paid if they paid. Payment failed cancels the order and puts the piece back in stock.'
+            : 'All open checkouts. Payment failed removes the order and returns the piece to add to cart.';
     }
   };
 
@@ -4696,12 +4744,15 @@
     const chrono = [...rows].sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0));
     const queueMap = new Map(chrono.map((order, i) => [order.id, i + 1]));
     const seen = JSON.parse(localStorage.getItem('zora_seen_orders') || '[]');
-    const waiting = rows.filter((order) => !isPaidStatus(order.status));
-    const paid = rows.filter((order) => isPaidStatus(order.status));
+    const active = rows.filter((order) => !isCancelledStatus(order.status));
+    const waiting = active.filter((order) => !isPaidStatus(order.status));
+    const paid = active.filter((order) => isPaidStatus(order.status));
     waiting.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
     paid.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-    const newest = [...rows].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-    allList.innerHTML = newest.map((order) => orderCardHTML(order, queueMap, seen)).join('');
+    const newest = [...active].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+    allList.innerHTML = newest.length
+      ? newest.map((order) => orderCardHTML(order, queueMap, seen)).join('')
+      : '<p class="empty-state">No orders yet. Place a test checkout, then tap Refresh orders.</p>';
     unpaidList.innerHTML = waiting.length
       ? waiting.map((order) => orderCardHTML(order, queueMap, seen)).join('')
       : '<p class="empty-state">No unpaid orders.</p>';
