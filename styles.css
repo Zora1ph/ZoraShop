@@ -1541,6 +1541,47 @@ body.is-catalog .icon-btn:hover { background: rgba(0, 0, 0, 0.06); }
 .order-card .payment-identity {
   margin: 12px 0;
 }
+.order-pack {
+  margin: 12px 0;
+  padding-top: 10px;
+  border-top: 1px solid #333;
+}
+.order-pack-title {
+  margin: 0 0 8px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a8a8a;
+}
+.order-pack ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+.order-pack li {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  gap: 10px;
+  align-items: start;
+  color: #fff;
+  font-size: 13px;
+}
+.order-pack img,
+.order-pack-ph {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  background: #111;
+  display: block;
+}
+.order-pack strong { display: block; }
+.order-pack-meta {
+  display: block;
+  color: #bdbdbd;
+  font-size: 12px;
+}
 .account-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
 .account-tab {
   min-height: 44px;

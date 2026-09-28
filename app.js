@@ -1179,7 +1179,7 @@
   const ORDER_COLS =
     'id,items,total,payment_method,status,name,phone,address,user_email,notes,created_at';
   const ADMIN_ORDER_LIST_COLS =
-    'id,total,payment_method,status,name,phone,address,user_email,notes,created_at';
+    'id,items,total,payment_method,status,name,phone,address,user_email,notes,created_at';
 
   const persistProductsCache = () => {
     try {
@@ -3167,7 +3167,12 @@
     }
   };
 
-  const enrichCartItems = () => cart.map(slimLineItem);
+  const enrichCartItems = () =>
+    cart.map((item) => {
+      const row = slimLineItem(item);
+      row.image = '';
+      return row;
+    });
 
   const orderItemImage = (item) => {
     if (isLightImage(item?.image)) return item.image;
@@ -3237,7 +3242,9 @@
     lines.push(`  Address: ${order.address}`);
     lines.push('');
     lines.push('ITEMS:');
-    (order.items || []).forEach((item) => {
+    const pack = orderItemsForDisplay(order);
+    if (!pack.length) lines.push('  • (no item names saved — open Admin → Orders)');
+    pack.forEach((item) => {
       const qty = item.quantity || item.qty || 1;
       const product = products.find((p) => p.id === item.id) || {};
       lines.push(`  • ${item.name || product.name || 'Item'}`);
@@ -3587,7 +3594,8 @@
       member50: order.memberOff ? monthKey() : '',
       ship: 'unpaid',
       hold: '1',
-      pay: isAutomaticPay() ? 'auto' : 'manual'
+      pay: isAutomaticPay() ? 'auto' : 'manual',
+      lines: encodeOrderLinesNote(order.items)
     });
     storeLocalOrder(order);
     lastOrder = order;
@@ -3617,6 +3625,14 @@
     }
 
     if (order.promo) recordPromoUse(order.promo, order.user_email);
+
+    sendStoreEmail({
+      subject: `ZORA ORDER ${order.id} — WAITING — ${order.name} / ${order.phone}`,
+      name: order.name,
+      email: order.user_email || STORE_EMAIL,
+      message: buildOrderMessage(order, 'Unpaid — waiting for payment'),
+      extra: { payment: order.payment_method, order_id: order.id, paid: 'no' }
+    });
 
     cart = [];
     appliedPromo = null;
@@ -3741,6 +3757,51 @@
       .filter(([, v]) => v != null && String(v) !== '')
       .map(([k, v]) => k + '=' + String(v))
       .join(';');
+  };
+
+  const encodeOrderLinesNote = (items) =>
+    (items || [])
+      .map((item) => {
+        const qty = item.quantity || item.qty || 1;
+        return [item.name || '', item.size || '', item.color || '', qty, Number(item.price) || 0]
+          .map((v) => String(v).replace(/[;=|~]/g, ' ').trim())
+          .join('~');
+      })
+      .join('|');
+
+  const decodeOrderLinesNote = (notes) => {
+    const raw = String(parseOrderNotes(notes).lines || '');
+    if (!raw) return [];
+    return raw
+      .split('|')
+      .filter(Boolean)
+      .map((row) => {
+        const [name, size, color, qty, price] = row.split('~');
+        return {
+          name: name || 'Item',
+          size: size || '',
+          color: color || '',
+          quantity: Number(qty) || 1,
+          price: Number(price) || 0
+        };
+      });
+  };
+
+  const orderItemsForDisplay = (order) => {
+    const items = Array.isArray(order?.items)
+      ? order.items.filter((item) => item && (item.name || item.id))
+      : [];
+    if (items.length) {
+      return items.map((item) => {
+        const product = products.find((p) => p.id === item.id) || {};
+        return {
+          ...item,
+          name: item.name || product.name || 'Item',
+          quantity: item.quantity || item.qty || 1
+        };
+      });
+    }
+    return decodeOrderLinesNote(order?.notes);
   };
 
   const STOCK_HOLD_MS = 30 * 60 * 1000;
@@ -4477,7 +4538,7 @@
     let order = null;
     try {
       const rows = await supaRequest(
-        `/rest/v1/orders?id=eq.${encodeURIComponent(orderId)}&select=id,notes,name,phone,address,user_email,payment_method,total,status`
+        `/rest/v1/orders?id=eq.${encodeURIComponent(orderId)}&select=id,items,notes,name,phone,address,user_email,payment_method,total,status`
       );
       order = Array.isArray(rows) && rows[0] ? rows[0] : null;
     } catch {
@@ -4596,6 +4657,9 @@
       extra: { payment: order.payment_method, order_id: order.id, paid: status === 'Paid' ? 'yes' : 'no' }
     });
     if (status === 'Paid') {
+      document.querySelectorAll(`#adminAllOrders .order-card[data-order-id="${CSS.escape(String(orderId))}"], #adminUnpaidOrders .order-card[data-order-id="${CSS.escape(String(orderId))}"]`).forEach((el) => {
+        el.remove();
+      });
       adminOrderSubtab = 'paid';
       syncOrderSubtabs();
       renderAdminOrders();
@@ -4618,7 +4682,7 @@
           ? 'Paid orders. Scan the J&T waybill so tracking goes live for the customer.'
           : adminOrderSubtab === 'unpaid'
             ? 'Unpaid checkouts. Mark paid if they paid. Payment failed cancels the order and puts the piece back in stock.'
-            : 'All open checkouts. Payment failed removes the order and returns the piece to add to cart.';
+            : 'Waiting checkouts. Mark paid and they leave this tab and open in Paid orders.';
     }
   };
 
@@ -4626,6 +4690,7 @@
     const queue = String(queueMap.get(order.id) || 0).padStart(4, '0');
     const isNew = !seen.includes(order.id);
     const paid = isPaidStatus(order.status);
+    const pack = orderItemsForDisplay(order);
     return `
         <div class="order-card${paid ? ' order-card--paid' : ''}" data-order-id="${escapeHtml(order.id)}">
           <span class="order-queue">${paid ? 'PAID' : 'WAITING'} · #${queue}${isNew ? ' · NEW' : ''}</span>
@@ -4633,6 +4698,32 @@
           <p><strong>When:</strong> ${escapeHtml(order.created_at ? new Date(order.created_at).toLocaleString() : '')}</p>
           <p><strong>Payment:</strong> ${paid ? 'Paid' : 'Waiting — tap Mark paid as soon as they pay'}</p>
           <p>${escapeHtml(paymentLabel(order.payment_method))} · ${formatPrice(order.total || 0)}</p>
+          <div class="order-pack">
+            <p class="order-pack-title">Purchased</p>
+            ${
+              pack.length
+                ? `<ul>${pack
+                    .map((item) => {
+                      const qty = item.quantity || item.qty || 1;
+                      const cover = orderItemImage(item);
+                      const bits = [
+                        item.size ? 'Size ' + item.size : '',
+                        item.color || '',
+                        '× ' + qty
+                      ].filter(Boolean);
+                      return `<li>
+                        ${cover ? `<img src="${cover}" alt="" />` : '<span class="order-pack-ph"></span>'}
+                        <div>
+                          <strong>${escapeHtml(item.name || 'Item')}</strong>
+                          <span class="order-pack-meta">${escapeHtml(bits.join(' · '))}</span>
+                          <span class="order-pack-meta">${formatPrice(itemLineTotal(item))}</span>
+                        </div>
+                      </li>`;
+                    })
+                    .join('')}</ul>`
+                : '<p class="admin-hint">No product names on this order.</p>'
+            }
+          </div>
           <div class="payment-identity">
             <p class="payment-identity-title">Customer</p>
             <p><strong>Name</strong><span class="copy-line">${escapeHtml(order.name || '')}</span></p>
@@ -4731,7 +4822,15 @@
       const data = await supaRequest(
         `/rest/v1/orders?select=${ADMIN_ORDER_LIST_COLS}&order=created_at.desc&limit=80`
       );
-      if (Array.isArray(data)) rows = data;
+      if (Array.isArray(data)) {
+        rows = data.map((order) => ({
+          ...order,
+          items: (Array.isArray(order.items) ? order.items : []).map((item) => ({
+            ...item,
+            image: isLightImage(item?.image) ? item.image : ''
+          }))
+        }));
+      }
     } catch {
       rows = [];
     }
@@ -4749,10 +4848,9 @@
     const paid = active.filter((order) => isPaidStatus(order.status));
     waiting.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
     paid.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-    const newest = [...active].sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
-    allList.innerHTML = newest.length
-      ? newest.map((order) => orderCardHTML(order, queueMap, seen)).join('')
-      : '<p class="empty-state">No orders yet. Place a test checkout, then tap Refresh orders.</p>';
+    allList.innerHTML = waiting.length
+      ? waiting.map((order) => orderCardHTML(order, queueMap, seen)).join('')
+      : '<p class="empty-state">No waiting orders. Paid checkouts are in Paid orders.</p>';
     unpaidList.innerHTML = waiting.length
       ? waiting.map((order) => orderCardHTML(order, queueMap, seen)).join('')
       : '<p class="empty-state">No unpaid orders.</p>';
